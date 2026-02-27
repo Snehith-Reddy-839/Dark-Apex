@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HemoScan | AI Powered Anemia Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="main-container">
+
+    <!-- HERO SECTION -->
+    <div class="hero-card">
+        <h1>AI-Powered Anemia Detection</h1>
+        <p>
+            Advanced machine learning technology for rapid and accurate anemia screening.
+            Our system analyzes key blood parameters to provide instant diagnostic insights.
+        </p>
+
+        <div class="features">
+            <div class="feature-box">AI Powered</div>
+            <div class="feature-box">Instant Results</div>
+            <div class="feature-box">Clinically Guided</div>
+            <div class="feature-box">High Accuracy</div>
+        </div>
+    </div>
+
+    <!-- PATIENT DIAGNOSIS -->
+    <div class="diagnosis-card">
+
+        <h2>Patient Diagnosis</h2>
+
+        <form method="POST">
+
+            <div class="gender-toggle">
+                <label>
+                    <input type="radio" name="gender" value="1" required>
+                    Male
+                </label>
+
+                <label>
+                    <input type="radio" name="gender" value="0" required>
+                    Female
+                </label>
+            </div>
+
+            <div class="input-grid">
+                <input type="number" step="0.1" name="hemoglobin" placeholder="Hemoglobin (g/dL)" required>
+                <input type="number" step="0.1" name="mch" placeholder="MCH (pg)" required>
+                <input type="number" step="0.1" name="mchc" placeholder="MCHC (g/dL)" required>
+                <input type="number" step="0.1" name="mcv" placeholder="MCV (fL)" required>
+            </div>
+
+            <button class="analyze-btn">Analyze Blood Parameters</button>
+
+        </form>
+    </div>
+
+    {% if prediction %}
+    <div class="result-card {{ risk_class }}">
+
+        <h3>{{ prediction }}</h3>
+        <p>{{ message }}</p>
+
+        <div class="risk-bar">
+            <div class="risk-fill" style="width: {{ risk_percent }}%;"></div>
+        </div>
+
+        <p class="risk-label">Anemia Risk Level: {{ risk_percent }}%</p>
+
+    </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

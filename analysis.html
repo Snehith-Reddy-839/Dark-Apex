@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HemoScan - Anemia Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="navbar">
+    <div><b>HemoScan</b></div>
+    <div>
+        <a href="/">Home</a>
+        <a href="/analysis">Analysis</a>
+    </div>
+</div>
+
+<div class="analysis-container">
+    <div class="analysis-box">
+        <h2>Anemia Risk Analysis</h2>
+
+        <form action="/predict" method="POST">
+
+            <select name="gender" required>
+                <option value="">Select Gender</option>
+                <option value="1">Male</option>
+                <option value="0">Female</option>
+            </select>
+
+            <input type="number" step="0.1" name="hemoglobin" placeholder="Hemoglobin (g/dL)" required>
+            <input type="number" step="0.1" name="mch" placeholder="MCH (pg)" required>
+            <input type="number" step="0.1" name="mchc" placeholder="MCHC (g/dL)" required>
+            <input type="number" step="0.1" name="mcv" placeholder="MCV (fL)" required>
+
+            <button type="submit">Analyze</button>
+        </form>
+
+        {% if prediction_text %}
+
+            <h3 style="margin-top:20px;">{{ prediction_text }}</h3>
+
+            <div class="risk-bar">
+                <div class="risk-fill"
+                     style="
+                     width: {{ confidence_value }}%;
+                     background:
+                     {% if confidence_value < 25 %}
+                        #2ecc71
+                     {% elif confidence_value < 50 %}
+                        #f1c40f
+                     {% elif confidence_value < 75 %}
+                        #e67e22
+                     {% else %}
+                        #e74c3c
+                     {% endif %}
+                     ;
+                     ">
+                </div>
+            </div>
+
+            <p style="margin-top:10px;">
+                Risk Level:
+                {% if confidence_value < 25 %}
+                    Normal
+                {% elif confidence_value < 50 %}
+                    Mild Risk
+                {% elif confidence_value < 75 %}
+                    Moderate Risk
+                {% else %}
+                    Severe Risk
+                {% endif %}
+            </p>
+
+        {% endif %}
+
+    </div>
+</div>
+
+</body>
+</html>
