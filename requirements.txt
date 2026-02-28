@@ -1,6 +1,0 @@
-flask
-pandas
-openai
-plotly
-python-dotenv
-groq
