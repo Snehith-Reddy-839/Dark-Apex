@@ -7,3 +7,4 @@ reportlab
 pillow
 pytesseract
 pypdf
+gunicorn
