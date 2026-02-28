@@ -49,7 +49,7 @@ try:
 except ImportError:
     load_dotenv = None
 
-from utils import load_dataset, estimate_anemia_risk
+from src.utils import load_dataset, estimate_anemia_risk
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 BASE_DIR = Path(__file__).resolve().parent
