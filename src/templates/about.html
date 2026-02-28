@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="about-card mb-4">
+    <h1 class="mb-3">ℹ️ About HEMOSCAN</h1>
+    <p class="mb-3">HEMOSCAN is a lightweight anemia screening web app designed to make basic CBC-based risk assessment
+      more accessible and understandable.</p>
+    <p class="mb-0">The platform combines a prediction workflow, dataset exploration, and an AI educational assistant in
+      a single Flask application.</p>
+  </div>
+
+  <div class="about-card mb-4">
+    <h3 class="mb-3">What HEMOSCAN Includes</h3>
+    <ul class="feature-list mb-0">
+      <li><span class="badge-icon red">•</span>Patient assessment form for anemia risk estimation using core blood
+        parameters</li>
+      <li><span class="badge-icon blue">•</span>Dataset explorer with charts, column details, and downloadable CSV</li>
+      <li><span class="badge-icon green">•</span>AI assistant for educational guidance on anemia and interpretation
+        basics</li>
+      <li><span class="badge-icon purple">•</span>Responsive interface with light/dark theme support</li>
+    </ul>
+  </div>
+
+  <div class="about-card mb-4">
+    <h3 class="mb-3">Clinical Notice</h3>
+    <p class="mb-2">HEMOSCAN is intended for learning and screening support only.</p>
+    <p class="mb-0">It does <strong>not</strong> provide diagnosis, prescriptions, or emergency triage. Always consult a
+      licensed clinician for medical decisions.</p>
+  </div>
+
+  <div class="about-card">
+    <h3 class="mb-3">Support</h3>
+    <p class="mb-2"><strong>Need help using the app?</strong></p>
+    <ul class="mb-3">
+      <li>Check the <a href="/faq">FAQ</a> for common setup and usage questions.</li>
+      <li>Refresh the page with <strong>Ctrl+F5</strong> if graphs or theme updates do not appear.</li>
+      <li>Ensure your Flask server is running and <code>api.env</code> is configured if using AI features.</li>
+    </ul>
+    <p class="mb-0 text-muted">For project-level issues, share reproduction steps (page, input values, and
+      screenshot/error message) with your development team.</p>
+  </div>
+</div>
+
+{% endblock %}
