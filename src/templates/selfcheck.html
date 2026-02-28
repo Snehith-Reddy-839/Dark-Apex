@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<section class="selfcheck-hero mb-4">
+    <div class="selfcheck-hero-inner">
+        <h1 class="mb-2">📝 SelfCheck Quiz</h1>
+        <p class="mb-0">Answer this MCQ quiz to get a quick anemia-related symptom indication.</p>
+    </div>
+</section>
+
+<div class="row g-4 selfcheck-layout">
+    <div class="col-lg-7">
+        <div class="card p-4 selfcheck-quiz-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Symptom Quiz (MCQ)</h5>
+                <span class="badge text-bg-light selfcheck-count">{{ questions|length }} Questions</span>
+            </div>
+
+            {% if error %}
+            <div class="alert alert-danger selfcheck-error">{{ error }}</div>
+            {% endif %}
+
+            <form method="post" action="/selfcheck">
+                <div class="row g-3">
+                    {% for question in questions %}
+                    <div class="col-12">
+                        <div class="selfcheck-question-card">
+                            <div class="d-flex align-items-start gap-2 mb-2">
+                                <span class="selfcheck-qno">{{ loop.index }}</span>
+                                <p class="mb-0 fw-semibold">{{ question.question }}</p>
+                            </div>
+                            {% for option in question.options %}
+                            <div class="mb-2">
+                                <input class="btn-check" type="radio" name="{{ question.key }}"
+                                    value="{{ option.value }}" id="{{ question.key }}_{{ loop.index0 }}" {% if
+                                    selected_answers.get(question.key,'')==(option.value|string) %}checked{% endif %}>
+                                <label class="selfcheck-option w-100" for="{{ question.key }}_{{ loop.index0 }}">
+                                    {{ option.label }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-3 d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary selfcheck-submit-btn">
+                        <i class="bi bi-activity me-1"></i>Check My Risk
+                    </button>
+                    <a href="/selfcheck" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card p-4 h-100 selfcheck-result-card">
+            <h5 class="mb-3">Result Summary</h5>
+
+            {% if result %}
+            <div class="alert alert-{{ result.alert_class }} selfcheck-result-alert">
+                <h6 class="mb-2">{{ result.status }}</h6>
+                <p class="mb-1"><strong>Risk Level:</strong> {{ result.level }}</p>
+                <p class="mb-1"><strong>Symptom Score:</strong> {{ result.score }}</p>
+                <p class="mb-0"><strong>Guidance:</strong> {{ result.guidance }}</p>
+            </div>
+
+            {% if result.selected_labels %}
+            <div class="mt-3">
+                <h6 class="mb-2">Your MCQ Responses</h6>
+                <ul class="mb-0">
+                    {% for label in result.selected_labels %}
+                    <li>{{ label }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-muted selfcheck-empty-state">
+                Submit the quiz to see your anemia-related self-check result.
+            </div>
+            {% endif %}
+
+            <div class="small text-muted mt-4 selfcheck-disclaimer">
+                This quiz is educational screening support and not a medical diagnosis.
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

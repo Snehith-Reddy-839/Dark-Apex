@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1 class="mb-3">🩺 Patient Risk Assessment</h1>
+
+<div class="row">
+  <div class="col-md-8">
+
+    <div class="card p-3 mb-3">
+      <h5>📷 OCR Blood Report Scanner</h5>
+      <form method="post" action="/scan-report" enctype="multipart/form-data" class="mt-2">
+        <div class="mb-2">
+          <label class="form-label">Upload image or PDF</label>
+          <input type="file" class="form-control" name="report_file" accept=".pdf,.png,.jpg,.jpeg,.bmp,.tiff,.webp"
+            required>
+        </div>
+        <button class="btn btn-outline-dark" type="submit">
+          <i class="bi bi-camera me-1"></i>Scan & Auto-Extract
+        </button>
+      </form>
+      <small class="text-muted d-block mt-2">Auto-extract values • Auto-detect lab units • Clean formatting</small>
+    </div>
+
+    {% if scan_success %}
+    <div class="alert alert-info">{{ scan_success }}</div>
+    {% endif %}
+
+    {% if scan_formatting_rows %}
+    <div class="card p-3 mb-3">
+      <h6>Extracted Values (Clean Formatting)</h6>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Detected</th>
+              <th>Normalized</th>
+              <th>Unit Handling</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in scan_formatting_rows %}
+            <tr>
+              <td><strong>{{ row.metric }}</strong></td>
+              <td>{{ row.raw }}</td>
+              <td>{{ row.normalized }}</td>
+              <td>{{ row.note }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if scan_extracted_preview %}
+      <div class="mt-2 small text-muted"><strong>OCR preview:</strong> {{ scan_extracted_preview }}</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="/assess">
+      <div class="card p-3 mb-3">
+        <h5>Patient Information</h5>
+
+        <div class="row">
+          <div class="col-md-6">
+            <label class="form-label">Gender</label>
+            <select name="gender" class="form-select">
+              <option {% if gender_label|default('Female')=='Female' %}selected{% endif %}>Female</option>
+              <option {% if gender_label|default('Female')=='Male' %}selected{% endif %}>Male</option>
+            </select>
+
+            <label class="form-label mt-2">Hemoglobin (g/dL)</label>
+            <input name="hemoglobin" type="number" step="0.1" class="form-control"
+              value="{{ hemoglobin|default(12.5) }}">
+
+            <label class="form-label mt-2">MCH (pg)</label>
+            <input name="mch" type="number" step="0.1" class="form-control" value="{{ mch|default(27.0) }}">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">MCHC (g/dL)</label>
+            <input name="mchc" type="number" step="0.1" class="form-control" value="{{ mchc|default(33.0) }}">
+
+            <label class="form-label mt-2">MCV (fL)</label>
+            <input name="mcv" type="number" step="0.1" class="form-control" value="{{ mcv|default(85.0) }}">
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <button class="btn btn-primary" type="submit">
+            Analyze Patient Data
+          </button>
+        </div>
+      </div>
+    </form>
+
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    {% if missing_metrics %}
+    <div class="alert alert-danger border-danger">
+      <h6 class="mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>Missing Required Values</h6>
+      <ul class="mb-0">
+        {% for metric in missing_metrics %}
+        <li>{{ metric }} is missing</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if result %}
+    <div class="card p-4 mb-3">
+
+      <h5>Analysis Results</h5>
+
+      <p><strong>Gender:</strong> {{ gender_label }}</p>
+      <p><strong>Hemoglobin:</strong> {{ hemoglobin }} g/dL</p>
+
+      <p>
+        <strong>Risk Score:</strong>
+        <span id="riskNumber">{{ '%.1f'|format(risk_percent) }}</span>%
+      </p>
+
+      <!-- Animated Risk Bar -->
+      <div class="mt-3">
+        <div style="font-weight:600; margin-bottom:6px;">Risk Level</div>
+
+        {% if result %}
+        {%- set risk_class = ('low' if risk_percent < 25 else 'mild' if risk_percent < 50 else 'moderate' if
+          risk_percent < 75 else 'severe' ) -%} {% else %} {%- set risk_class='low' -%} {% endif %} <div
+          style="background:#e9ecef; border-radius:25px; height:28px; overflow:hidden;">
+          <div id="riskBar" class="{{ risk_class }}" data-risk="{{ risk_percent }}" style="
+                   width:0%;
+                   height:100%;
+                   border-radius:25px;
+                 ">
+          </div>
+      </div>
+
+      <div class="d-flex justify-content-between mt-1 small text-muted">
+        <span>0%</span>
+        <span>25%</span>
+        <span>50%</span>
+        <span>75%</span>
+        <span>100%</span>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      {% if risk_percent < 25 %} <span class="badge bg-success">LOW RISK</span>
+        {% elif risk_percent < 50 %} <span class="badge bg-warning text-dark">MILD RISK</span>
+          {% elif risk_percent < 75 %} <span class="badge bg-warning">MODERATE RISK</span>
+            {% else %}
+            <span class="badge bg-danger">SEVERE RISK</span>
+            {% endif %}
+    </div>
+
+    <div class="mt-3">
+      <h6>Recommendations</h6>
+      {% if prediction == 1 %}
+      <div class="alert alert-danger">
+        Anemia risk detected. Consult a specialist.
+      </div>
+      {% else %}
+      <div class="alert alert-success">
+        No anemia risk detected. Maintain healthy lifestyle.
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="mt-3">
+      {% if risk_percent < 25 %} {% set suggestions_btn_class="btn-outline-success" %} {% set
+        suggestions_card_class="border-success bg-success-subtle" %} {% elif risk_percent < 50 %} {% set
+        suggestions_btn_class="btn-outline-warning" %} {% set suggestions_card_class="border-warning bg-warning-subtle"
+        %} {% elif risk_percent < 75 %} {% set suggestions_btn_class="btn-outline-warning" %} {% set
+        suggestions_card_class="border-warning bg-warning-subtle" %} {% else %} {% set
+        suggestions_btn_class="btn-outline-danger" %} {% set suggestions_card_class="border-danger bg-danger-subtle" %}
+        {% endif %} <button class="btn {{ suggestions_btn_class }}" type="button" data-bs-toggle="collapse"
+        data-bs-target="#riskSuggestions" aria-expanded="false" aria-controls="riskSuggestions">
+        <i class="bi bi-lightbulb me-1"></i>Suggestions
+        </button>
+        <div class="collapse mt-2" id="riskSuggestions">
+          <div class="card card-body {{ suggestions_card_class }}">
+            <h6 class="mb-2">Suggestions Based on Current Condition</h6>
+            {% if risk_percent < 25 %} <ul class="mb-0">
+              <li>Continue balanced nutrition with iron-rich foods and vitamin C sources.</li>
+              <li>Maintain hydration, sleep quality, and regular physical activity.</li>
+              <li>Repeat routine CBC checks during regular health follow-up.</li>
+              </ul>
+              {% elif risk_percent < 50 %} <ul class="mb-0">
+                <li>Increase dietary iron intake (leafy greens, legumes, lean proteins).</li>
+                <li>Track symptoms such as fatigue, dizziness, or reduced stamina.</li>
+                <li>Plan a follow-up CBC and discuss trends with a clinician.</li>
+                </ul>
+                {% elif risk_percent < 75 %} <ul class="mb-0">
+                  <li>Schedule clinician review and consider confirmatory laboratory tests.</li>
+                  <li>Review possible causes (dietary deficiency, blood loss, chronic conditions).</li>
+                  <li>Avoid delaying follow-up if symptoms are persistent or worsening.</li>
+                  </ul>
+                  {% else %}
+                  <ul class="mb-0">
+                    <li>Seek prompt medical evaluation for comprehensive anemia workup.</li>
+                    <li>Bring CBC history and this report to support clinical decision-making.</li>
+                    <li>If severe symptoms occur, contact emergency care immediately.</li>
+                  </ul>
+                  {% endif %}
+          </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+      <form method="post" action="/download-report">
+        <input type="hidden" name="gender_label" value="{{ gender_label }}">
+        <input type="hidden" name="hemoglobin" value="{{ hemoglobin }}">
+        <input type="hidden" name="mch" value="{{ mch }}">
+        <input type="hidden" name="mchc" value="{{ mchc }}">
+        <input type="hidden" name="mcv" value="{{ mcv }}">
+        <input type="hidden" name="risk_percent" value="{{ risk_percent }}">
+        <input type="hidden" name="prediction" value="{{ prediction }}">
+        <input type="hidden" name="neighbors_used" value="{{ neighbors_used }}">
+        <button type="submit" class="btn btn-outline-primary">
+          <i class="bi bi-download me-1"></i>Download Health Report
+        </button>
+      </form>
+    </div>
+
+  </div>
+  {% endif %}
+</div>
+
+<div class="col-md-4">
+  <div class="card p-3 mb-3">
+    <h6>Quick Guide</h6>
+    <p><b>Hemoglobin:</b> Men: 13.5-17.5 g/dL, Women: 12.0-15.5 g/dL</p>
+    <p><b>MCH:</b> 27-33 pg</p>
+    <p><b>MCHC:</b> 32-36 g/dL</p>
+    <p><b>MCV:</b> 80-100 fL</p>
+  </div>
+</div>
+</div>
+
+<!-- ✅ SCRIPT INSIDE BLOCK -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+    const numberEl = document.getElementById("riskNumber");
+    const barEl = document.getElementById("riskBar");
+
+    if (!numberEl || !barEl) return;
+
+    const finalValue = parseFloat(barEl.dataset.risk);
+    const duration = 1500;
+    let start = null;
+
+    function animate(timestamp) {
+      if (!start) start = timestamp;
+
+      const progress = Math.min((timestamp - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+
+      const current = finalValue * eased;
+
+      numberEl.textContent = current.toFixed(1);
+      barEl.style.width = current + "%";
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        numberEl.textContent = finalValue.toFixed(1);
+        barEl.style.width = finalValue + "%";
+      }
+    }
+
+    requestAnimationFrame(animate);
+
+  });
+</script>
+
+{% endblock %}
