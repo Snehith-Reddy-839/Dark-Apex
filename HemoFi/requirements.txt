@@ -1,9 +1,0 @@
-flask
-pandas
-plotly
-python-dotenv
-groq
-reportlab
-pillow
-pytesseract
-pypdf
